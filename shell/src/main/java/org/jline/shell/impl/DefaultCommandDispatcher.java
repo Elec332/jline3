@@ -23,6 +23,8 @@ import org.jline.reader.impl.completer.SystemCompleter;
 import org.jline.shell.*;
 import org.jline.shell.Pipeline.Operator;
 import org.jline.terminal.Terminal;
+import org.jline.utils.AttributedStringBuilder;
+import org.jline.utils.AttributedStyle;
 
 /**
  * Default implementation of {@link CommandDispatcher} that supports pipeline execution.
@@ -290,7 +292,7 @@ public class DefaultCommandDispatcher implements CommandDispatcher {
 
             Command cmd = findCommand(cmdName);
             if (cmd == null) {
-                throw new IllegalArgumentException("Unknown command: " + cmdName);
+                throw new UnknownCommandException("Unknown command: " + cmdName);
             }
 
             String[] args = argsStr.isEmpty() ? new String[0] : argsStr.split("\\s+");
@@ -534,6 +536,17 @@ public class DefaultCommandDispatcher implements CommandDispatcher {
             }
         }
         return true;
+    }
+
+    @Override
+    public void trace(Throwable exception) {
+        if (exception instanceof UnknownCommandException) {
+            AttributedStringBuilder asb = new AttributedStringBuilder();
+            asb.styled(AttributedStyle.DEFAULT.foreground(AttributedStyle.RED), exception.getMessage());
+            asb.toAttributedString().println(terminal());
+            return;
+        }
+        CommandDispatcher.super.trace(exception);
     }
 
     @Override
